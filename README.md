@@ -128,6 +128,26 @@ make sdk-test            # test
 
 **Mirror**: Local cache at `$HOME/tmp/mirror` (configurable) for offline operation. Stores downloaded toolchains, files and repo mirrors. Possible to opt out of mirroring with `--no-mirror` or disable in user config.
 
+> **Mirror dependency warning**: Workspaces initialized from a mirror borrow git
+> objects from it via git alternates (`.git/objects/info/alternates`). This
+> means the workspace git history depends on the mirror being present. Your
+> working tree files and any commits you have made locally are always safe, but
+> git operations that traverse history (`git log`, `git checkout <old-sha>`,
+> `git diff HEAD~N`) will fail if the mirror is removed.
+>
+> If the mirror is accidentally deleted, re-running `cim update` restores it
+> and the workspace recovers automatically — no data is lost.
+>
+> If you really want to make a workspace fully self-contained and independent
+> of the mirror, run the following inside each git repository in the workspace:
+>
+> ```bash
+> git fetch --unshallow
+> ```
+>
+> This copies all borrowed objects from the mirror into the workspace itself.
+> From that point the workspace no longer needs the mirror for git operations.
+
 **Target**: Predefined SDK configuration in a manifest repository under `targets/<name>/sdk.yml`.
 
 ### Common Commands
