@@ -21,6 +21,36 @@ use git2::{
 };
 use sha2::{Digest, Sha256};
 use std::path::Path;
+use std::sync::OnceLock;
+
+/// Stores the resolved certificate validation mode for the process lifetime.
+static CERT_MODE: OnceLock<String> = OnceLock::new();
+
+/// Initialize the certificate validation mode for all git operations in this
+/// process.  Call once at command entry with the CLI override (if any).
+/// If never called, `allow_invalid_certs()` falls back to reading user config.
+pub fn init_cert_mode(cli_override: Option<&str>) {
+    let (mode, show_warning) = crate::config::get_cert_validation_mode(cli_override);
+    if show_warning {
+        crate::messages::info(
+            "Warning: TLS certificate validation is disabled (cert_validation = relaxed in user config). \
+             Connections are not verified.",
+        );
+    }
+    let _ = CERT_MODE.set(mode);
+}
+
+/// Returns `true` when TLS certificate errors should be ignored for git
+/// operations (mode is "relaxed" or "auto").
+fn allow_invalid_certs() -> bool {
+    match CERT_MODE.get() {
+        Some(mode) => mode != "strict",
+        None => {
+            let (mode, _) = crate::config::get_cert_validation_mode(None);
+            mode != "strict"
+        }
+    }
+}
 
 #[derive(Debug)]
 pub struct GitResult {
@@ -226,6 +256,12 @@ fn make_remote_callbacks<'a>() -> RemoteCallbacks<'a> {
         crate::messages::verbose("  credential: no suitable credentials found");
         Err(git2::Error::from_str("no suitable credentials found"))
     });
+
+    if allow_invalid_certs() {
+        callbacks
+            .certificate_check(|_cert, _valid| Ok(git2::CertificateCheckStatus::CertificateOk));
+    }
+
     callbacks
 }
 

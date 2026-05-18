@@ -241,7 +241,13 @@ fn create_config_file(path: &Path) -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Handle the list-targets command
-pub(crate) fn handle_list_targets_command(source: Option<&str>, target_filter: Option<&str>) {
+pub(crate) fn handle_list_targets_command(
+    source: Option<&str>,
+    target_filter: Option<&str>,
+    cert_validation: Option<&str>,
+) {
+    git_operations::init_cert_mode(cert_validation);
+
     let default_source = get_default_source();
     let (source_path, using_user_default) = if let Some(src) = source {
         (src.to_string(), false)
@@ -319,8 +325,11 @@ pub(crate) fn handle_update_command(
     no_mirror: bool,
     match_pattern: Option<&str>,
     verbose: bool,
-    _cert_validation: Option<&str>,
+    cert_validation: Option<&str>,
 ) {
+    // Initialize certificate validation mode for all git operations
+    git_operations::init_cert_mode(cert_validation);
+
     // Start background version check so it runs concurrently with the update
     let version_check = spawn_version_check();
 

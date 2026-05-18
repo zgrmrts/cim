@@ -50,6 +50,13 @@ pub enum Commands {
         /// Show detailed output (credential attempts, git operations)
         #[arg(long)]
         verbose: bool,
+        /// Certificate validation mode for downloads (strict, relaxed, auto)
+        #[arg(
+            long,
+            value_name = "MODE",
+            help = "Certificate validation: strict (default), relaxed (insecure), auto"
+        )]
+        cert_validation: Option<String>,
     },
     /// Initialize a new workspace from a configuration file
     Init {
@@ -555,6 +562,7 @@ mod tests {
                 source,
                 target,
                 verbose,
+                ..
             }) => {
                 assert!(source.is_none());
                 assert!(target.is_none());
@@ -574,6 +582,7 @@ mod tests {
                 source,
                 target,
                 verbose,
+                ..
             }) => {
                 assert_eq!(source, &Some("/path/to/source".to_string()));
                 assert!(target.is_none());

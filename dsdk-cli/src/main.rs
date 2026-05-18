@@ -60,9 +60,14 @@ fn main() {
             source,
             target,
             verbose,
+            cert_validation,
         } => {
             messages::set_verbose(*verbose);
-            handle_list_targets_command(source.as_deref(), target.as_deref());
+            handle_list_targets_command(
+                source.as_deref(),
+                target.as_deref(),
+                cert_validation.as_deref(),
+            );
         }
         Commands::Init {
             target,
@@ -104,7 +109,7 @@ fn main() {
                 no_sudo: *no_sudo,
                 symlink: *symlink,
                 yes: *yes,
-                _cert_validation: cert_validation.as_deref(),
+                cert_validation: cert_validation.as_deref(),
             });
         }
         Commands::Foreach { command, r#match } => {

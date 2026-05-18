@@ -553,7 +553,7 @@ pub(crate) struct InitConfig<'a> {
     pub(crate) no_sudo: bool,
     pub(crate) symlink: bool,
     pub(crate) yes: bool,
-    pub(crate) _cert_validation: Option<&'a str>,
+    pub(crate) cert_validation: Option<&'a str>,
 }
 
 /// Write .envrc and trust the workspace with direnv.
@@ -589,6 +589,9 @@ pub(crate) fn setup_direnv(
 
 /// Initialize a new workspace
 pub(crate) fn handle_init_command(config: InitConfig) {
+    // Initialize certificate validation mode for all git operations
+    git_operations::init_cert_mode(config.cert_validation);
+
     // Start background version check so it runs concurrently with the rest of init
     let version_check = spawn_version_check();
 
