@@ -37,6 +37,12 @@ pub fn init_cert_mode(cli_override: Option<&str>) {
              Connections are not verified.",
         );
     }
+    // On Windows, libgit2 uses WinHTTP which handles TLS via Schannel and
+    // ignores the certificate_check callback.  GIT_SSL_NO_VERIFY is the
+    // standard env var that libgit2 checks across all HTTP backends.
+    if mode != "strict" {
+        std::env::set_var("GIT_SSL_NO_VERIFY", "true");
+    }
     let _ = CERT_MODE.set(mode);
 }
 
